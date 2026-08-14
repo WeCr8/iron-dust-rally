@@ -53,12 +53,12 @@ def context_for(task: dict, config: dict) -> str:
         files.append(skill)
     for folder in (ROOT / "game/scripts", ROOT / "game/scenes", ROOT / "agent/tests"):
         if folder.exists():
-            files.extend(sorted(path for path in folder.rglob("*") if path.is_file()))
+            files.extend(sorted(path for path in folder.rglob("*") if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"))
     chunks = ["ACTIVE TASK:\n" + json.dumps(task, indent=2)]
     budget = int(config["max_context_chars"])
     for path in files:
         content = path.read_text(encoding="utf-8", errors="replace")
-        chunk = f"\nFILE {path.relative_to(ROOT)}\n{content}"
+        chunk = f"\nFILE {path.relative_to(ROOT).as_posix()}\n{content}"
         if sum(len(item) for item in chunks) + len(chunk) > budget:
             break
         chunks.append(chunk)

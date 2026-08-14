@@ -4,7 +4,7 @@
   "max_patch_lines": 500,
   "max_context_chars": 50000,
   "max_consecutive_failures": 4,
-  "command_timeout_seconds": 300,
+  "command_timeout_seconds": 450,
   "gates": [
     ["python", "tools/validate_repo.py"],
     ["python", "-m", "unittest", "discover", "-s", "agent/tests", "-v"],

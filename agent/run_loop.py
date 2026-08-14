@@ -129,7 +129,7 @@ def main() -> int:
                     run(["git", "commit", "-m", f"agent: block {task['id']} with evidence"], 60)
                     write_event(log, {"event": "blocked", "task": task["id"], "reason": response["blocker"]})
                     continue
-                applied = run(["git", "apply", "--whitespace=error", "-"], 60, response["patch"])
+                applied = run(["git", "apply", "--whitespace=fix", "-"], 60, response["patch"])
                 if applied.returncode:
                     raise PatchRejected(applied.stderr.strip())
                 applied_patch = response["patch"]

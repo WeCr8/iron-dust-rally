@@ -74,7 +74,7 @@ def write_event(handle, event: dict) -> None:
 def main() -> int:
     load_env_file(ROOT / ".env")
     parser = argparse.ArgumentParser(description="Guarded multi-iteration local-LLM development loop")
-    parser.add_argument("--runtime", choices=["ollama", "lmstudio", "llamacpp"], default=os.getenv("LOCAL_LLM_RUNTIME", "ollama"))
+    parser.add_argument("--runtime", choices=["ollama", "lmstudio", "llamacpp", "openrouter"], default=os.getenv("LOCAL_LLM_RUNTIME", "ollama"))
     parser.add_argument("--model", default=os.getenv("LOCAL_LLM_MODEL", "qwen3-coder:30b"))
     parser.add_argument("--hours", type=float, default=1.0)
     parser.add_argument("--max-iterations", type=int, default=10)
@@ -89,7 +89,13 @@ def main() -> int:
     if status.stdout.strip() and not args.allow_dirty:
         print("Worktree is not clean; commit/stash changes or explicitly use --allow-dirty.", file=sys.stderr)
         return 2
-    urls = {"ollama": os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434"), "lmstudio": os.getenv("LMSTUDIO_BASE_URL", "http://127.0.0.1:1234/v1"), "llamacpp": os.getenv("LLAMACPP_BASE_URL", "http://127.0.0.1:8080/v1")}
+    urls = {
+        "ollama": os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
+        "lmstudio": os.getenv("LMSTUDIO_BASE_URL", "http://127.0.0.1:1234/v1"),
+        "llamacpp": os.getenv("LLAMACPP_BASE_URL", "http://127.0.0.1:8080/v1"),
+        "openrouter": os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+    }
+    api_key = os.getenv("OPENROUTER_API_KEY") if args.runtime == "openrouter" else None
     run_id = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     run_dir = ROOT / "agent/runs" / run_id
     run_dir.mkdir(parents=True)
@@ -118,7 +124,7 @@ def main() -> int:
                 continue
             applied_patch = ""
             try:
-                raw = chat(args.runtime, urls[args.runtime], args.model, [{"role": "system", "content": system}, {"role": "user", "content": prompt}], int(config["command_timeout_seconds"]))
+                raw = chat(args.runtime, urls[args.runtime], args.model, [{"role": "system", "content": system}, {"role": "user", "content": prompt}], int(config["command_timeout_seconds"]), api_key)
                 response = parse_model_json(raw)
                 paths = validate_patch(response["patch"], config)
                 if response["blocker"] and not response["patch"].strip():
@@ -148,7 +154,7 @@ def main() -> int:
                     previous_failure = json.dumps(gate_outputs)
                     write_event(log, {"event": "gates_failed", "task": task["id"], "gates": gate_outputs})
                 else:
-                    review_raw = chat(args.runtime, urls[args.runtime], args.model, [{"role": "system", "content": reviewer_system}, {"role": "user", "content": json.dumps({"task": task, "diff": response["patch"], "gates": gate_outputs})}], int(config["command_timeout_seconds"]))
+                    review_raw = chat(args.runtime, urls[args.runtime], args.model, [{"role": "system", "content": reviewer_system}, {"role": "user", "content": json.dumps({"task": task, "diff": response["patch"], "gates": gate_outputs})}], int(config["command_timeout_seconds"]), api_key)
                     review = json.loads(review_raw.strip().removeprefix("```json").removesuffix("```").strip())
                     if not review.get("approved", False):
                         raise RuntimeError("Review rejected patch: " + json.dumps(review.get("findings", [])))

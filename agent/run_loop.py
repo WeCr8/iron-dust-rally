@@ -46,9 +46,9 @@ def write_files(files: list[dict], paths: list[str]) -> dict[str, str | None]:
     originals: dict[str, str | None] = {}
     for rel_path in paths:
         full_path = ROOT / rel_path
-        originals[rel_path] = full_path.read_text(encoding="utf-8") if full_path.exists() else None
+        originals[rel_path] = full_path.read_text(encoding="utf-8", newline="") if full_path.exists() else None
         full_path.parent.mkdir(parents=True, exist_ok=True)
-        full_path.write_text(content_by_path[rel_path], encoding="utf-8")
+        full_path.write_text(content_by_path[rel_path], encoding="utf-8", newline="\n")
     return originals
 
 
@@ -58,7 +58,7 @@ def revert_files(originals: dict[str, str | None]) -> None:
         if original is None:
             full_path.unlink(missing_ok=True)
         else:
-            full_path.write_text(original, encoding="utf-8")
+            full_path.write_text(original, encoding="utf-8", newline="")
 
 
 def select_task(tasks: dict) -> dict | None:
@@ -161,7 +161,7 @@ def main() -> int:
                 if response["blocker"] and not response["files"]:
                     task["status"] = "blocked"
                     task["blocker"] = response["blocker"]
-                    tasks_path.write_text(json.dumps(tasks, indent=2) + "\n", encoding="utf-8")
+                    tasks_path.write_text(json.dumps(tasks, indent=2) + "\n", encoding="utf-8", newline="\n")
                     run(["git", "add", "--", "agent/tasks.json"], 30)
                     run(["git", "commit", "-m", f"agent: block {task['id']} with evidence"], 60)
                     write_event(log, {"event": "blocked", "task": task["id"], "reason": response["blocker"]})
@@ -190,7 +190,7 @@ def main() -> int:
                     if response["task_complete"]:
                         task["status"] = "done"
                         task["completed_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
-                        tasks_path.write_text(json.dumps(tasks, indent=2) + "\n", encoding="utf-8")
+                        tasks_path.write_text(json.dumps(tasks, indent=2) + "\n", encoding="utf-8", newline="\n")
                     run(["git", "add", "--", *paths, "agent/tasks.json"], 60)
                     commit = run(["git", "commit", "-m", f"agent: {task['id']} {task['title']}"], 60)
                     if commit.returncode:

@@ -46,7 +46,7 @@ def write_files(files: list[dict], paths: list[str]) -> dict[str, str | None]:
     originals: dict[str, str | None] = {}
     for rel_path in paths:
         full_path = ROOT / rel_path
-        originals[rel_path] = full_path.read_text(encoding="utf-8", newline="") if full_path.exists() else None
+        originals[rel_path] = full_path.read_text(encoding="utf-8") if full_path.exists() else None
         full_path.parent.mkdir(parents=True, exist_ok=True)
         full_path.write_text(content_by_path[rel_path], encoding="utf-8", newline="\n")
     return originals

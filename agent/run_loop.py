@@ -135,7 +135,7 @@ def main() -> int:
                     run(["git", "commit", "-m", f"agent: block {task['id']} with evidence"], 60)
                     write_event(log, {"event": "blocked", "task": task["id"], "reason": response["blocker"]})
                     continue
-                applied = run(["git", "apply", "--whitespace=fix", "-"], 60, response["patch"])
+                applied = run(["git", "apply", "--whitespace=fix", "--recount", "-C1", "-"], 60, response["patch"])
                 if applied.returncode:
                     raise PatchRejected(applied.stderr.strip())
                 applied_patch = response["patch"]
@@ -148,7 +148,7 @@ def main() -> int:
                         passed = False
                         break
                 if not passed:
-                    run(["git", "apply", "-R", "-"], 60, response["patch"])
+                    run(["git", "apply", "-R", "--recount", "-C1", "-"], 60, response["patch"])
                     applied_patch = ""
                     failures += 1
                     previous_failure = json.dumps(gate_outputs)
@@ -172,7 +172,7 @@ def main() -> int:
                     write_event(log, {"event": "checkpoint", "task": task["id"], "paths": paths, "summary": response["summary"]})
             except (LocalLLMError, PatchRejected, RuntimeError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
                 if applied_patch:
-                    run(["git", "apply", "-R", "-"], 60, applied_patch)
+                    run(["git", "apply", "-R", "--recount", "-C1", "-"], 60, applied_patch)
                 failures += 1
                 previous_failure = str(exc)
                 write_event(log, {"event": "failure", "task": task["id"], "error": str(exc)})

@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 
-class PatchRejected(ValueError):
+class ResponseRejected(ValueError):
     pass
 
 
@@ -16,46 +16,36 @@ def parse_model_json(raw: str) -> dict:
     try:
         data = json.loads(text)
     except json.JSONDecodeError as exc:
-        raise PatchRejected(f"Model did not return valid JSON: {exc}") from exc
-    required = {"summary", "patch", "tests", "task_complete", "blocker"}
+        raise ResponseRejected(f"Model did not return valid JSON: {exc}") from exc
+    required = {"summary", "files", "tests", "task_complete", "blocker"}
     if not required.issubset(data):
-        raise PatchRejected(f"Missing response keys: {sorted(required - set(data))}")
-    if not isinstance(data["patch"], str) or not isinstance(data["tests"], list):
-        raise PatchRejected("patch must be a string and tests must be a list")
+        raise ResponseRejected(f"Missing response keys: {sorted(required - set(data))}")
+    if not isinstance(data["files"], list) or not isinstance(data["tests"], list):
+        raise ResponseRejected("files and tests must be lists")
+    for entry in data["files"]:
+        if not isinstance(entry, dict) or not isinstance(entry.get("path"), str) or not isinstance(entry.get("content"), str):
+            raise ResponseRejected("each files[] entry needs a string path and string content")
     return data
 
 
-def changed_paths(patch: str) -> list[str]:
-    paths = []
-    for line in patch.splitlines():
-        if line.startswith("+++ b/") or line.startswith("--- a/"):
-            path = line[6:]
-            if path != "/dev/null" and path not in paths:
-                paths.append(path)
-    return paths
-
-
-def validate_patch(patch: str, config: dict) -> list[str]:
-    if not patch.strip():
+def validate_files(files: list[dict], config: dict) -> list[str]:
+    if not files:
         return []
-    if not patch.startswith("diff --git "):
-        raise PatchRejected("Patch must be a git unified diff")
-    if "GIT binary patch" in patch or "Binary files" in patch:
-        raise PatchRejected("Binary patches are not allowed")
-    changed_lines = sum(1 for line in patch.splitlines() if line.startswith(("+", "-")) and not line.startswith(("+++", "---")))
+    changed_lines = sum(len(entry["content"].splitlines()) for entry in files)
     if changed_lines > int(config["max_patch_lines"]):
-        raise PatchRejected(f"Patch has {changed_lines} changed lines; budget is {config['max_patch_lines']}")
-    paths = changed_paths(patch)
-    if not paths:
-        raise PatchRejected("Patch contains no changed paths")
+        raise ResponseRejected(f"Files total {changed_lines} lines; budget is {config['max_patch_lines']}")
     allowed = tuple(root.rstrip("/") + "/" for root in config["allowed_roots"])
     denied = tuple(config["denied_paths"])
-    for raw in paths:
+    paths = []
+    for entry in files:
+        raw = entry["path"]
         path = Path(raw)
         if path.is_absolute() or ".." in path.parts:
-            raise PatchRejected(f"Unsafe path: {raw}")
+            raise ResponseRejected(f"Unsafe path: {raw}")
         if not raw.startswith(allowed):
-            raise PatchRejected(f"Path outside allowlist: {raw}")
+            raise ResponseRejected(f"Path outside allowlist: {raw}")
         if any(raw == item or raw.startswith(item.rstrip("/") + "/") for item in denied):
-            raise PatchRejected(f"Denied path: {raw}")
+            raise ResponseRejected(f"Denied path: {raw}")
+        if raw not in paths:
+            paths.append(raw)
     return paths

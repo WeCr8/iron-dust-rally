@@ -11,10 +11,10 @@ import time
 from pathlib import Path
 
 try:
-    from .guardrails import PatchRejected, parse_model_json, validate_patch
+    from .guardrails import ResponseRejected, parse_model_json, validate_files
     from .local_llm import LocalLLMError, chat
 except ImportError:  # Direct script execution.
-    from guardrails import PatchRejected, parse_model_json, validate_patch
+    from guardrails import ResponseRejected, parse_model_json, validate_files
     from local_llm import LocalLLMError, chat
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,6 +38,27 @@ def load_json(path: Path) -> dict:
 
 def run(command: list[str], timeout: int, input_text: str | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(command, cwd=ROOT, input=input_text, text=True, encoding="utf-8", errors="replace", capture_output=True, timeout=timeout, check=False)
+
+
+def write_files(files: list[dict], paths: list[str]) -> dict[str, str | None]:
+    """Write full file contents to disk, returning a snapshot for reverting."""
+    content_by_path = {entry["path"]: entry["content"] for entry in files}
+    originals: dict[str, str | None] = {}
+    for rel_path in paths:
+        full_path = ROOT / rel_path
+        originals[rel_path] = full_path.read_text(encoding="utf-8") if full_path.exists() else None
+        full_path.parent.mkdir(parents=True, exist_ok=True)
+        full_path.write_text(content_by_path[rel_path], encoding="utf-8")
+    return originals
+
+
+def revert_files(originals: dict[str, str | None]) -> None:
+    for rel_path, original in originals.items():
+        full_path = ROOT / rel_path
+        if original is None:
+            full_path.unlink(missing_ok=True)
+        else:
+            full_path.write_text(original, encoding="utf-8")
 
 
 def select_task(tasks: dict) -> dict | None:
@@ -133,12 +154,11 @@ def main() -> int:
             if args.dry_run:
                 print(f"DRY RUN: would submit {task['id']} ({len(prompt)} context chars) to {args.runtime}/{args.model}")
                 continue
-            applied_patch = ""
+            originals: dict[str, str | None] = {}
             try:
                 raw = chat(args.runtime, urls[args.runtime], args.model, [{"role": "system", "content": system}, {"role": "user", "content": prompt}], int(config["command_timeout_seconds"]), api_key, response_schema)
                 response = parse_model_json(raw)
-                paths = validate_patch(response["patch"], config)
-                if response["blocker"] and not response["patch"].strip():
+                if response["blocker"] and not response["files"]:
                     task["status"] = "blocked"
                     task["blocker"] = response["blocker"]
                     tasks_path.write_text(json.dumps(tasks, indent=2) + "\n", encoding="utf-8")
@@ -146,10 +166,8 @@ def main() -> int:
                     run(["git", "commit", "-m", f"agent: block {task['id']} with evidence"], 60)
                     write_event(log, {"event": "blocked", "task": task["id"], "reason": response["blocker"]})
                     continue
-                applied = run(["git", "apply", "--whitespace=fix", "--recount", "-C3", "-"], 60, response["patch"])
-                if applied.returncode:
-                    raise PatchRejected(applied.stderr.strip())
-                applied_patch = response["patch"]
+                paths = validate_files(response["files"], config)
+                originals = write_files(response["files"], paths)
                 gate_outputs = []
                 passed = True
                 for gate in config["gates"]:
@@ -159,13 +177,13 @@ def main() -> int:
                         passed = False
                         break
                 if not passed:
-                    run(["git", "apply", "-R", "--recount", "-C3", "-"], 60, response["patch"])
-                    applied_patch = ""
+                    revert_files(originals)
+                    originals = {}
                     failures += 1
                     previous_failure = json.dumps(gate_outputs)
                     write_event(log, {"event": "gates_failed", "task": task["id"], "gates": gate_outputs})
                 else:
-                    review_raw = chat(args.runtime, urls[args.runtime], args.model, [{"role": "system", "content": reviewer_system}, {"role": "user", "content": json.dumps({"task": task, "diff": response["patch"], "gates": gate_outputs})}], int(config["command_timeout_seconds"]), api_key, reviewer_schema)
+                    review_raw = chat(args.runtime, urls[args.runtime], args.model, [{"role": "system", "content": reviewer_system}, {"role": "user", "content": json.dumps({"task": task, "files": response["files"], "gates": gate_outputs})}], int(config["command_timeout_seconds"]), api_key, reviewer_schema)
                     review = json.loads(review_raw.strip().removeprefix("```json").removesuffix("```").strip())
                     if not review.get("approved", False):
                         raise RuntimeError("Review rejected patch: " + json.dumps(review.get("findings", [])))
@@ -179,11 +197,11 @@ def main() -> int:
                         raise RuntimeError(commit.stderr.strip())
                     failures = 0
                     previous_failure = ""
-                    applied_patch = ""
+                    originals = {}
                     write_event(log, {"event": "checkpoint", "task": task["id"], "paths": paths, "summary": response["summary"]})
-            except (LocalLLMError, PatchRejected, RuntimeError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
-                if applied_patch:
-                    run(["git", "apply", "-R", "--recount", "-C3", "-"], 60, applied_patch)
+            except (LocalLLMError, ResponseRejected, RuntimeError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+                if originals:
+                    revert_files(originals)
                 failures += 1
                 previous_failure = str(exc)
                 write_event(log, {"event": "failure", "task": task["id"], "error": str(exc)})

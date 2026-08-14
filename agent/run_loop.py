@@ -37,7 +37,7 @@ def load_json(path: Path) -> dict:
 
 
 def run(command: list[str], timeout: int, input_text: str | None = None) -> subprocess.CompletedProcess:
-    return subprocess.run(command, cwd=ROOT, input=input_text, text=True, capture_output=True, timeout=timeout, check=False)
+    return subprocess.run(command, cwd=ROOT, input=input_text, text=True, encoding="utf-8", errors="replace", capture_output=True, timeout=timeout, check=False)
 
 
 def select_task(tasks: dict) -> dict | None:

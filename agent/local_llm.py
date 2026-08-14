@@ -26,10 +26,10 @@ def _post(url: str, payload: dict, timeout: int, api_key: str | None = None) -> 
         raise LocalLLMError(f"Local model request failed: {exc}") from exc
 
 
-def chat(runtime: str, base_url: str, model: str, messages: list[dict], timeout: int = 300, api_key: str | None = None) -> str:
+def chat(runtime: str, base_url: str, model: str, messages: list[dict], timeout: int = 300, api_key: str | None = None, response_schema: dict | None = None) -> str:
     base = base_url.rstrip("/")
     if runtime == "ollama":
-        data = _post(f"{base}/api/chat", {"model": model, "messages": messages, "stream": False, "format": "json"}, timeout)
+        data = _post(f"{base}/api/chat", {"model": model, "messages": messages, "stream": False, "format": response_schema or "json"}, timeout)
         try:
             return data["message"]["content"]
         except (KeyError, TypeError) as exc:

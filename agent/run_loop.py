@@ -104,6 +104,17 @@ def main() -> int:
     tasks_path = ROOT / "agent/tasks.json"
     system = (ROOT / "agent/prompts/system.md").read_text(encoding="utf-8")
     reviewer_system = (ROOT / "agent/prompts/reviewer.md").read_text(encoding="utf-8")
+    response_schema = load_json(ROOT / "agent/schemas/model_response.schema.json") if args.runtime == "ollama" else None
+    reviewer_schema = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["approved", "findings", "summary"],
+        "properties": {
+            "approved": {"type": "boolean"},
+            "findings": {"type": "array", "items": {"type": "object"}},
+            "summary": {"type": "string"},
+        },
+    } if args.runtime == "ollama" else None
     previous_failure = ""
     with (run_dir / "events.jsonl").open("a", encoding="utf-8") as log:
         for iteration in range(1, args.max_iterations + 1):
@@ -124,7 +135,7 @@ def main() -> int:
                 continue
             applied_patch = ""
             try:
-                raw = chat(args.runtime, urls[args.runtime], args.model, [{"role": "system", "content": system}, {"role": "user", "content": prompt}], int(config["command_timeout_seconds"]), api_key)
+                raw = chat(args.runtime, urls[args.runtime], args.model, [{"role": "system", "content": system}, {"role": "user", "content": prompt}], int(config["command_timeout_seconds"]), api_key, response_schema)
                 response = parse_model_json(raw)
                 paths = validate_patch(response["patch"], config)
                 if response["blocker"] and not response["patch"].strip():
@@ -154,7 +165,7 @@ def main() -> int:
                     previous_failure = json.dumps(gate_outputs)
                     write_event(log, {"event": "gates_failed", "task": task["id"], "gates": gate_outputs})
                 else:
-                    review_raw = chat(args.runtime, urls[args.runtime], args.model, [{"role": "system", "content": reviewer_system}, {"role": "user", "content": json.dumps({"task": task, "diff": response["patch"], "gates": gate_outputs})}], int(config["command_timeout_seconds"]), api_key)
+                    review_raw = chat(args.runtime, urls[args.runtime], args.model, [{"role": "system", "content": reviewer_system}, {"role": "user", "content": json.dumps({"task": task, "diff": response["patch"], "gates": gate_outputs})}], int(config["command_timeout_seconds"]), api_key, reviewer_schema)
                     review = json.loads(review_raw.strip().removeprefix("```json").removesuffix("```").strip())
                     if not review.get("approved", False):
                         raise RuntimeError("Review rejected patch: " + json.dumps(review.get("findings", [])))

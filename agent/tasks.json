@@ -18,7 +18,7 @@
     {
       "id": "T002",
       "priority": 2,
-      "status": "ready",
+      "status": "done",
       "title": "Map players three and four gamepad inputs",
       "skill": "godot-gameplay",
       "depends_on": [],
@@ -26,7 +26,8 @@
         "P3 and P4 input actions exist",
         "All four gamepads can independently steer, accelerate, brake, and boost",
         "CPU fallback remains"
-      ]
+      ],
+      "completed_at": "2026-08-14T13:47:09.422762+00:00"
     },
     {
       "id": "T003",

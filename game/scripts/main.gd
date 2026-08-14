@@ -16,8 +16,34 @@ var race_started := false
 var title_font: Font
 
 func _ready() -> void:
+	# Set up input mappings for all potential players.
+	_setup_player_inputs()
 	title_font = ThemeDB.fallback_font
 	_start_race()
+
+func _setup_player_inputs() -> void:
+	# Map gamepad inputs for players 3 and 4 if connected.
+	var pads := Input.get_connected_joypads()
+	# Define button indices: A=0, B=1, X=2, Y=3, LB=4 (used for boost).
+	var button_map = {
+		"accelerate": 0,
+		"brake": 1,
+		"left": 3,
+		"right": 2,
+		"boost": 4
+	}
+	for i in range(2, 4):
+		if pads.size() > i:
+			var device_id := pads[i]
+			var prefix := "p%d_" % (i + 1)
+			for act_name in button_map.keys():
+				var action := prefix + act_name
+				if not InputMap.has_action(action):
+					InputMap.add_action(action)
+					var ev = InputEventJoypadButton.new()
+					ev.device = device_id
+					ev.button_index = button_map[act_name]
+					InputMap.action_add_event(action, ev)
 
 func _start_race() -> void:
 	for racer in racers:
@@ -74,7 +100,7 @@ func _update_pickups(delta: float) -> void:
 			pickup_timers[i] -= delta
 			if pickup_timers[i] <= 0.0:
 				pickup_active[i] = true
-			continue
+				continue
 		for racer in racers:
 			if racer.position.distance_to(PICKUP_SPOTS[i]) < 34.0:
 				racer.add_boost(35.0)

@@ -96,13 +96,13 @@ func _draw() -> void:
 	draw_line(Vector2(565, 105), Vector2(715, 105), Color.WHITE, 8.0)
 	draw_string(title_font, Vector2(28, 42), "IRON DUST RALLY", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("fff3d4"))
 	for i in racers.size():
-		var racer := racers[i]
-		var status := "FIN %d" % racer.finish_place if racer.finished else "LAP %d/3  BOOST %d" % [min(racer.lap + 1, 3), int(racer.boost)]
+		var racer: RallyRacer = racers[i]
+		var status: String = ("FIN %d" % racer.finish_place) if racer.finished else ("LAP %d/3  BOOST %d" % [min(racer.lap + 1, 3), int(racer.boost)])
 		draw_rect(Rect2(28, 66 + i * 34, 255, 26), Color(0.05, 0.04, 0.03, 0.78), true)
 		draw_circle(Vector2(42, 79 + i * 34), 7.0, COLORS[i])
 		draw_string(title_font, Vector2(56, 85 + i * 34), "P%d  %s%s" % [i + 1, status, " CPU" if not racer.human else ""], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
 	if not race_started:
-		var text := str(max(1, ceili(countdown))) if countdown > 0.0 else "GO!"
+		var text: String = str(max(1, ceili(countdown))) if countdown > 0.0 else "GO!"
 		draw_string(title_font, Vector2(585, 380), text, HORIZONTAL_ALIGNMENT_CENTER, 110, 64, Color.WHITE)
 	elif finish_count == 4:
 		draw_rect(Rect2(440, 265, 400, 160), Color(0.04, 0.03, 0.02, 0.9), true)

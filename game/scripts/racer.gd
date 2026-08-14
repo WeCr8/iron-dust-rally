@@ -48,7 +48,7 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.from_angle(heading) * speed
 		move_and_slide()
 		return
-	var intent := _human_intent() if human else _cpu_intent()
+	var intent: Vector3 = _human_intent() if human else _cpu_intent()
 	var throttle: float = intent.x
 	var steer: float = intent.y
 	if throttle > 0.0:
@@ -60,7 +60,7 @@ func _physics_process(delta: float) -> void:
 	if intent.z > 0.5 and boost > 0.0 and speed > 30.0:
 		speed = min(speed + 260.0 * delta, MAX_SPEED * 1.34)
 		boost = max(0.0, boost - 28.0 * delta)
-	var steering_scale := clamp(abs(speed) / 95.0, 0.15, 1.0)
+	var steering_scale: float = clamp(abs(speed) / 95.0, 0.15, 1.0)
 	heading += steer * TURN_RATE * steering_scale * delta * sign(speed if abs(speed) > 2.0 else 1.0)
 	var radial := position.distance_to(track_center)
 	if radial < 150.0 or radial > 335.0:
@@ -80,9 +80,9 @@ func _human_intent() -> Vector3:
 func _cpu_intent() -> Vector3:
 	var desired := position.direction_to(next_target).angle()
 	var error := wrapf(desired - heading, -PI, PI)
-	var steer := clamp(error * 1.8, -1.0, 1.0)
-	var throttle := 0.58 if abs(error) > 1.15 else 1.0
-	var use_boost := boost > 20.0 and abs(error) < 0.18 and position.distance_to(next_target) > 220.0
+	var steer: float = clamp(error * 1.8, -1.0, 1.0)
+	var throttle: float = 0.58 if abs(error) > 1.15 else 1.0
+	var use_boost: bool = boost > 20.0 and abs(error) < 0.18 and position.distance_to(next_target) > 220.0
 	return Vector3(throttle, steer, 1.0 if use_boost else 0.0)
 
 func add_boost(amount: float) -> void:

@@ -1,0 +1,1 @@
+{"sprint_name":"vertical-slice-buildout","default_hours":6,"default_max_iterations":60,"require_godot":true,"require_clean_git":true,"run_final_export":true,"heartbeat_seconds":60,"stale_lock_minutes":20}

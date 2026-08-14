@@ -1,0 +1,35 @@
+; Engine configuration file.
+; Edit through Godot where possible.
+config_version=5
+
+[application]
+config/name="Iron Dust Rally"
+run/main_scene="res://scenes/main.tscn"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+
+[physics]
+common/physics_ticks_per_second=60
+
+[input]
+p1_accelerate={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":87), Object(InputEventJoypadButton,"device":0,"button_index":0)]}
+p1_brake={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":83), Object(InputEventJoypadButton,"device":0,"button_index":1)]}
+p1_left={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":65), Object(InputEventJoypadMotion,"device":0,"axis":0,"axis_value":-1.0)]}
+p1_right={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":68), Object(InputEventJoypadMotion,"device":0,"axis":0,"axis_value":1.0)]}
+p1_boost={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":32), Object(InputEventJoypadButton,"device":0,"button_index":2)]}
+p2_accelerate={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":4194320), Object(InputEventJoypadButton,"device":1,"button_index":0)]}
+p2_brake={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":4194322), Object(InputEventJoypadButton,"device":1,"button_index":1)]}
+p2_left={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":4194311), Object(InputEventJoypadMotion,"device":1,"axis":0,"axis_value":-1.0)]}
+p2_right={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":4194313), Object(InputEventJoypadMotion,"device":1,"axis":0,"axis_value":1.0)]}
+p2_boost={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":4194309), Object(InputEventJoypadButton,"device":1,"button_index":2)]}
+restart={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":82)]}

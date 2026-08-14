@@ -1,0 +1,12 @@
+.env
+.godot/
+game/.godot/
+build/
+agent/runs/*
+!agent/runs/.gitkeep
+agent/state/runtime.json
+agent/state/sprint.lock
+agent/reports/LATEST_HANDOFF.md
+__pycache__/
+*.pyc
+STOP

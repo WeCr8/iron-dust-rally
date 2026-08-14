@@ -1,0 +1,13 @@
+{
+  "allowed_roots": ["game", "docs", "tools", "agent", "skills"],
+  "denied_paths": [".git", ".env", "LICENSE", "ASSET_LICENSES.md", "AGENTS.md", "agent/runs", "build"],
+  "max_patch_lines": 500,
+  "max_context_chars": 50000,
+  "max_consecutive_failures": 4,
+  "command_timeout_seconds": 300,
+  "gates": [
+    ["python", "tools/validate_repo.py"],
+    ["python", "-m", "unittest", "discover", "-s", "agent/tests", "-v"],
+    ["python", "tools/godot_gate.py"]
+  ]
+}

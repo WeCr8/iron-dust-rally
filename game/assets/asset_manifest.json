@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "art": {
+    "vehicles": {"path":"res://assets/art/vehicles_atlas.png","dimensions":[1238,1271],"alpha":true,"required":true},
+    "environment": {"path":"res://assets/art/environment_atlas.png","dimensions":[1254,1254],"alpha":false,"required":true},
+    "logo_ui": {"path":"res://assets/art/logo_ui_atlas.png","dimensions":[1536,1024],"alpha":true,"required":true}
+  },
+  "audio": {
+    "engine_loop":"res://assets/audio/engine_loop.wav","boost":"res://assets/audio/boost.wav","pickup":"res://assets/audio/pickup.wav","countdown":"res://assets/audio/countdown.wav","impact":"res://assets/audio/impact.wav","finish_stinger":"res://assets/audio/finish_stinger.wav"
+  },
+  "policy":"Add every future asset here and to ASSET_LICENSES.md before acceptance."
+}

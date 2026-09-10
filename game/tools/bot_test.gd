@@ -36,6 +36,7 @@ const MAX_SECONDS_PER_RACE := 600.0
 # From track_geometry.offset_loop: miter_length is capped at abs(offset) * 1.7, so a boundary
 # vertex never sits further than 1.7x half-width from the centerline. racer.gd uses a radius-20
 # CircleShape2D and main.gd builds wall segments 14px thick.
+const BOOST_CAP := 100.0
 const MITER_CAP := 1.7
 const CAR_RADIUS := 20.0
 const WALL_HALF_THICKNESS := 7.0
@@ -51,6 +52,8 @@ var _track_id := -1
 var _race: Node = null
 var _elapsed := 0.0
 var _last_lap := {}
+var _last_cp := {}
+var _max_advance := 0
 var _last_pos := {}
 var _last_move := {}
 var _completed := false
@@ -114,6 +117,31 @@ func _check_racer(i: int, r) -> void:
 		_problem(RACER_GD, 10, "%s has non-finite heading" % who)
 	if not _finite(r.boost) or r.boost < -0.001:
 		_problem(RACER_GD, 12, "%s has invalid boost %s - it must never go negative" % [who, r.boost])
+	# add_boost clamps to 100. Nothing else should be able to exceed it, and a pickup that
+	# stacked past the cap would hand one car a permanent advantage.
+	if r.boost > BOOST_CAP + 0.001:
+		_problem(RACER_GD, 178, "%s has boost %s, above the %d cap add_boost enforces" % [who, r.boost, int(BOOST_CAP)])
+
+	# Checkpoint index must move FORWARD. It may advance by more than one in a step:
+	# _update_race_progress credits every crossing detected that step, which is what makes
+	# progress independent of the frame rate.
+	#
+	# Multi-advance is worth watching rather than forbidding. Checkpoints sit roughly 42px apart
+	# and a car covers about 5.5px per physics step, so genuinely driving through two in one
+	# step is not possible - an advance of 2 or 3 means _crossed_checkpoint credited a
+	# checkpoint the car passed near but did not drive through, which is corner cutting. The
+	# maximum seen is reported so a regression in that behaviour is visible; only a BACKWARD
+	# move is treated as a failure, because that one is unambiguous.
+	if _last_cp.has(i) and not r.finished:
+		var prev_cp: int = _last_cp[i]
+		var n: int = r.centerline.size()
+		var advance: int = (r.checkpoint - prev_cp + n) % n
+		if advance > n / 2:
+			_problem(MAIN_GD, 133, "%s checkpoint moved BACKWARDS, %d -> %d (of %d)"
+				% [who, prev_cp, r.checkpoint, n])
+		elif advance > _max_advance:
+			_max_advance = advance
+	_last_cp[i] = r.checkpoint
 
 	if _last_lap.has(i) and r.lap < _last_lap[i]:
 		_problem(RACER_GD, 13, "%s lap count went backwards, %d -> %d" % [who, _last_lap[i], r.lap])
@@ -179,7 +207,7 @@ func _end_race() -> bool:
 					% [r.finish_place, _track_name()])
 			seen[r.finish_place] = true
 
-	var line := "  %-22s %s in %3ds   max %dpx from centerline" % [_track_name(), "COMPLETED" if _completed else "DID NOT FINISH", int(_elapsed), int(_max_off)]
+	var line := "  %-22s %s in %3ds   max %dpx from centerline, max checkpoint advance %d" % [_track_name(), "COMPLETED" if _completed else "DID NOT FINISH", int(_elapsed), int(_max_off), _max_advance]
 	_summary.append(line)
 	print(line)
 
@@ -217,6 +245,8 @@ func _next_race() -> bool:
 	_completed = false
 	_max_off = 0.0
 	_last_lap.clear()
+	_last_cp.clear()
+	_max_advance = 0
 	_last_pos.clear()
 	_last_move.clear()
 	return false

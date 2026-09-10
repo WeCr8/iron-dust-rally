@@ -231,7 +231,11 @@ func _track_name() -> String:
 
 
 func _problem(file: String, line: int, message: String) -> void:
-	var entry := "PROBLEM: %s:%d:1: %s [bot-test]" % [file, line, message]
+	# Emit a real filesystem path, never res://. The improve loop hands the picked path to an
+	# agent that has to open the file - it tried to work on "res://scripts/main.gd", found
+	# nothing on disk, and aborted before staging. globalize_path is what makes a finding here
+	# actionable rather than merely readable.
+	var entry := "PROBLEM: %s:%d:1: %s [bot-test]" % [ProjectSettings.globalize_path(file), line, message]
 	if not _problems.has(entry):
 		_problems.append(entry)
 

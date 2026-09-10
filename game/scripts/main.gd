@@ -96,35 +96,73 @@ func _add_bollard(pos: Vector2, radius: float) -> StaticBody2D:
 	add_child(body)
 	return body
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
+	# Input polling belongs here - it is per-frame by nature and must feel immediate.
 	if Input.is_action_just_pressed("restart"):
 		_start_race()
 	if Input.is_action_just_pressed("ui_cancel"):
 		get_tree().change_scene_to_file("res://scenes/title_screen.tscn")
+	queue_redraw()
+
+
+func _physics_process(delta: float) -> void:
+	# RACE STATE RUNS AT THE FIXED RATE, NOT THE FRAME RATE.
+	#
+	# This used to live in _process, and it made lap counting frame-rate dependent. Racer sets
+	# `previous_position = position` at the top of every _physics_process, so it is always
+	# exactly one physics step old. _crossed_checkpoint compares previous_position against
+	# position to catch a sign flip across the checkpoint - a window of one physics step, about
+	# 5.5px at full speed.
+	#
+	# When _process ran slower than physics, several physics steps passed between checks. The
+	# car moved the full distance but the crossing test only ever saw the last 5.5px of it, so
+	# any checkpoint crossed inside the gap was missed and the lap never counted. On a machine
+	# that dropped frames, laps simply stopped registering.
+	#
+	# That is exactly what made races unfinishable while main.gd polled a missing "restart"
+	# action: the per-frame error spam tanked the frame rate, and lap detection went with it.
+	# Fixing the input binding hid the symptom; sampling at the fixed rate removes the cause.
+	# It also makes a race deterministic, which is what lets the bot test assert on lap times.
 	if not race_started:
 		countdown -= delta
 		if countdown <= 0.0:
 			race_started = true
 			for racer in racers:
 				racer.set_physics_process(true)
-	else:
-		_update_race_progress()
-		_update_pickups(delta)
-		_update_rocks(delta)
-		if finish_grace > 0.0:
-			finish_grace -= delta
-			if finish_grace <= 0.0:
-				_finish_remaining_racers()
-	queue_redraw()
+		return
+
+	_update_race_progress()
+	_update_pickups(delta)
+	_update_rocks(delta)
+	if finish_grace > 0.0:
+		finish_grace -= delta
+		if finish_grace <= 0.0:
+			_finish_remaining_racers()
 
 func _update_race_progress() -> void:
+	# CREDIT EVERY CHECKPOINT CROSSED THIS STEP, NOT JUST ONE.
+	#
+	# The centerline is dense - around 56 points on these tracks - and a car at full speed
+	# covers several of them in a single step. Crediting one per call made progress depend on
+	# how often this function ran: polled many times per physics step it banked them all, polled
+	# once per step it banked one and the rest were lost, so the same car took three times
+	# longer to finish the same lap. Neither answer was the track's actual length.
+	#
+	# Looping until the crossing test stops passing removes the rate dependence entirely: a step
+	# credits exactly the checkpoints the car actually drove through. The bound is a guard, not
+	# a limit - it can only be reached if the test somehow always passes, and silently spinning
+	# inside a physics step would freeze the game.
 	var checkpoints: Array = track["centerline"]
 	for racer in racers:
 		if racer.finished:
 			continue
-		var target: Vector2 = checkpoints[racer.checkpoint]
-		racer.next_target = target
-		if _crossed_checkpoint(racer, target):
+		var credited := 0
+		while credited < checkpoints.size():
+			var target: Vector2 = checkpoints[racer.checkpoint]
+			racer.next_target = target
+			if not _crossed_checkpoint(racer, target):
+				break
+			credited += 1
 			if racer.checkpoint == 0:
 				racer.lap += 1
 				if racer.lap >= 3:
@@ -132,7 +170,7 @@ func _update_race_progress() -> void:
 					racer.mark_finished(finish_count)
 					if finish_count == 1:
 						finish_grace = 20.0
-					continue
+					break
 				racer.checkpoint = 1 if checkpoints.size() > 1 else 0
 			else:
 				racer.checkpoint = (racer.checkpoint + 1) % checkpoints.size()

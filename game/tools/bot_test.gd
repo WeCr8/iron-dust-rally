@@ -33,6 +33,12 @@ const TracksScript = preload("res://scripts/tracks.gd")
 const RACERS := 4
 const TIME_SCALE := 20
 const MAX_SECONDS_PER_RACE := 600.0
+# From track_geometry.offset_loop: miter_length is capped at abs(offset) * 1.7, so a boundary
+# vertex never sits further than 1.7x half-width from the centerline. racer.gd uses a radius-20
+# CircleShape2D and main.gd builds wall segments 14px thick.
+const MITER_CAP := 1.7
+const CAR_RADIUS := 20.0
+const WALL_HALF_THICKNESS := 7.0
 const STUCK_SECONDS := 25.0          # generous: CPUs legitimately slow in corners
 const MAIN_SCENE := "res://scenes/main.tscn"
 const MAIN_GD := "res://scripts/main.gd"
@@ -113,18 +119,36 @@ func _check_racer(i: int, r) -> void:
 		_problem(RACER_GD, 13, "%s lap count went backwards, %d -> %d" % [who, _last_lap[i], r.lap])
 	_last_lap[i] = r.lap
 
-	# BOUNDARY CONTAINMENT. The walls are StaticBody2D segments built along outer_boundary and
-	# inner_boundary, and the car is a CharacterBody2D using move_and_slide, so they should stop
-	# it. "Should" is the reason to measure: a wall with the wrong collision layer, or a gap
-	# between segments, looks fine in the source and lets cars drive into the desert.
-	# Distance past the track edge is the direct evidence - a contained car cannot exceed roughly
-	# half the track width plus its own radius.
-	var off: float = TracksScript.distance_to_centerline(r.position, r.centerline) - r.track_width / 2.0
-	if off > _max_off:
-		_max_off = off
-	if off > r.track_width:
-		_problem(MAIN_GD, 67, "%s escaped the track by %dpx (track width %d) - the boundary walls are not containing it"
-			% [who, int(off), int(r.track_width)])
+	# BOUNDARY CONTAINMENT, BOUNDED BY THE GEOMETRY THAT BUILDS THE WALLS.
+	#
+	# Two earlier attempts at this were wrong, and both failure modes are worth recording.
+	#
+	# A flat threshold of one track width could not tell a corner from an escape. offset_loop
+	# places each boundary vertex with a MITER whose length is capped at 1.7x the offset, so on
+	# a tight corner the wall genuinely sits far outside half-width and a car pressed against it
+	# looked like it had left the track by 265px.
+	#
+	# Geometry2D.is_point_in_polygon against the boundary loops looked exact and is not usable
+	# here: offset_loop can self-intersect on tight corners, and the test then reports points
+	# plainly on the track as being inside the infield - it flagged (590, 120) on Desert Oval,
+	# roughly 30px from a centerline whose half-width is 95.
+	#
+	# So the bound comes from the code that builds the walls. The furthest a wall can be from
+	# the centerline is half_width * MITER_CAP; a contained car adds its own radius and the half
+	# thickness of the wall segment. Anything beyond that could not be resting against a wall.
+	var half_width: float = r.track_width / 2.0
+	var limit: float = half_width * MITER_CAP + CAR_RADIUS + WALL_HALF_THICKNESS
+	# Only measure a car that is actually racing. mark_finished zeroes its collision layers and
+	# main.gd then coasts and viewport-clamps it, so a finished car drifts through walls by
+	# design - including it made the reported maximum meaningless.
+	if r.finished or not _race.race_started:
+		return
+	var dist: float = TracksScript.distance_to_centerline(r.position, r.centerline)
+	if dist > _max_off:
+		_max_off = dist
+	if dist > limit:
+		_problem(MAIN_GD, 67, "%s is %dpx from the centerline at %s, past the %dpx a wall can reach - the boundary is not containing it"
+			% [who, int(dist), r.position, int(limit)])
 
 	# Stuck detection applies only once the race is live and the car has not finished.
 	if _race.race_started and not r.finished:
@@ -155,7 +179,7 @@ func _end_race() -> bool:
 					% [r.finish_place, _track_name()])
 			seen[r.finish_place] = true
 
-	var line := "  %-22s %s in %3ds   max %dpx past track edge" % [_track_name(), "COMPLETED" if _completed else "DID NOT FINISH", int(_elapsed), int(_max_off)]
+	var line := "  %-22s %s in %3ds   max %dpx from centerline" % [_track_name(), "COMPLETED" if _completed else "DID NOT FINISH", int(_elapsed), int(_max_off)]
 	_summary.append(line)
 	print(line)
 
@@ -242,3 +266,23 @@ func _problem(file: String, line: int, message: String) -> void:
 
 func _finite(v: float) -> bool:
 	return not (is_nan(v) or is_inf(v))
+
+
+func _polygon(points: Array) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for p in points:
+		out.append(p)
+	return out
+
+
+func _distance_to_polygon(point: Vector2, poly: PackedVector2Array) -> float:
+	## How far the point sits from the nearest edge of the polygon. Used only to size a breach,
+	## so that a car resting against a wall is not confused with one that drove through it.
+	var best := INF
+	for i in poly.size():
+		var a := poly[i]
+		var b := poly[(i + 1) % poly.size()]
+		var d := Geometry2D.get_closest_point_to_segment(point, a, b).distance_to(point)
+		if d < best:
+			best = d
+	return best

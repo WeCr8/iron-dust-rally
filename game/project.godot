@@ -17,9 +17,18 @@
 ;                     does not exist; corrected to `RallyRacer.new()`.)
 ;   track_geometry.gd extends RefCounted - an autoload must extend Node, so registering this
 ;                     would fail at startup. It is a preloaded utility.
-;   game_state.gd     extends Node but is passed around explicitly rather than referenced as a
-;   profiles.gd       global anywhere in the current code. Left unregistered rather than
-;                     guessed at - add them if that is the intent.
+;   profiles.gd       extends Node and IS referenced, but only through get_node_or_null, so
+;                     every call site already handles its absence. Registering it would switch
+;                     on name/points persistence - a product decision, not a bug fix, so it is
+;                     left off deliberately.
+;
+; CORRECTED 2026-09-10. The note here used to claim game_state.gd was "passed around explicitly
+; rather than referenced as a global anywhere in the current code". That was wrong: six scripts
+; call get_node("/root/GameState") - main, title_screen, join_screen, car_select, track_select
+; and results. Because it was not registered, the call returned null and main.gd:27 died on
+; game_state.track_id, leaving `track` empty and cascading into nine errors on centerline,
+; spawns and rocks. The race could not start at all. Booting only loads title_screen.tscn, so
+; the headless boot gate reported a clean project the whole time.
 ;
 ; main_scene is title_screen: the navigation graph is
 ; title_screen -> join_screen -> car_select -> track_select -> race -> results -> title_screen,
@@ -40,6 +49,7 @@ UIAtlas="*res://scripts/ui_atlas.gd"
 MenuInput="*res://scripts/menu_input.gd"
 Vehicles="*res://scripts/vehicles.gd"
 Tracks="*res://scripts/tracks.gd"
+GameState="*res://scripts/game_state.gd"
 
 [display]
 

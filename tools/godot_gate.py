@@ -130,12 +130,32 @@ for gd in sorted(GAME.rglob("*.gd")):
         loc = re.search(r"\(res://" + re.escape(rel) + r":(\d+)\)", chk_out)
         add(gd.as_posix(), int(loc.group(1)) if loc else 1, m.group(1), "godot-parse")
 
+# STAGE 3: PLAY THE GAME. Parsing proves the code loads; it says nothing about whether a race
+# can be finished. The game ships CPU drivers, so it can play itself - bot_test.gd runs a full
+# four-CPU race on every track and asserts the invariants that make a race a race: no NaN
+# positions, boost never negative, laps never counting backwards, nobody permanently stuck,
+# everybody finishes, finish places unique.
+#
+# It already prints PROBLEM: lines in this gate's format, so its findings are passed straight
+# through and become loop work like any parse error.
+bot, bot_out = godot_run(["--script", "res://tools/bot_test.gd"], 900)
+bot_problems = 0
+for line in bot_out.splitlines():
+    if line.startswith("PROBLEM: ") and line not in problems:
+        problems.append(line)
+        bot_problems += 1
+for line in bot_out.splitlines():
+    if line.startswith("  ") and ("COMPLETED" in line or "DID NOT FINISH" in line):
+        print(line)
+
 for p_line in problems:
     print(p_line)
 
-total = boot_errors + script_errors
-print("\nGODOT_GATE: {} engine error(s) on boot, {} script parse error(s), "
-      "{} locatable, exit {}".format(boot_errors, script_errors, len(problems), result.returncode))
+print("")
+total = boot_errors + script_errors + bot_problems
+print("GODOT_GATE: {} boot error(s), {} script parse error(s), "
+      "{} gameplay failure(s), {} locatable".format(
+          boot_errors, script_errors, bot_problems, len(problems)))
 
 # Godot exits 0 even when an autoload fails to instantiate, so the return code alone would call
 # a broken game green. Count instead.

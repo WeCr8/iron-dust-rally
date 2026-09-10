@@ -1,0 +1,12 @@
+{
+  "id": "note_caution",
+  "role": "codriver",
+  "generatedAt": "2026-08-23T21:44:15.921Z",
+  "voiceId": "pNInz6obpgDQGcFmaJgB",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Caution! Rocks on the inside.",
+  "textSha256": "79f2a428b3e6c05559a0313c7c98ebd2cb270e07648eb7b44c3a347b39ca43b2",
+  "audioSha256": "fd99156e4c39e552571a87a832c8686a3c724e344d783897aa45ab56aa203d72",
+  "bytes": 44347
+}

@@ -1,0 +1,12 @@
+{
+  "id": "note_left_4",
+  "role": "codriver",
+  "generatedAt": "2026-08-23T21:44:13.792Z",
+  "voiceId": "pNInz6obpgDQGcFmaJgB",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Left four, tightens.",
+  "textSha256": "6df9c5784cdf4d8aa07e16f12a62e30648926fe2e20b313b1bb0a4cc36eb470f",
+  "audioSha256": "89fc99cf233f9a3ac47ca183dd8ca4588a702873a8a9060cb3932ade60e64c79",
+  "bytes": 21777
+}

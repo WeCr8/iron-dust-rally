@@ -1,0 +1,12 @@
+{
+  "id": "countdown_go",
+  "role": "announcer",
+  "generatedAt": "2026-08-23T21:44:04.905Z",
+  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Go!",
+  "textSha256": "e95c396138aa2091f23bde1d662f768dfdaf3d95987857ceabafffa639c8cbb8",
+  "audioSha256": "5cb98bd30795993fd879a120b46a12cdbd5147fd93a9ca3b84ef23efd3ba1549",
+  "bytes": 12164
+}

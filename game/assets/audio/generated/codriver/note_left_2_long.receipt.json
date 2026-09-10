@@ -1,0 +1,12 @@
+{
+  "id": "note_left_2_long",
+  "role": "codriver",
+  "generatedAt": "2026-08-23T21:44:15.130Z",
+  "voiceId": "pNInz6obpgDQGcFmaJgB",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Left two, long, don't cut.",
+  "textSha256": "7a2bb30f6f91c25153b7f071d13b366ef861ad9a9498ee340c23622b01b15ef0",
+  "audioSha256": "6525156b4ed62c1d186c296c821e3a96ca6b89bca6da7594b1ec2f5010d85e44",
+  "bytes": 27629
+}

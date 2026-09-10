@@ -1,0 +1,12 @@
+{
+  "id": "stage_penalty",
+  "role": "announcer",
+  "generatedAt": "2026-08-23T21:44:09.004Z",
+  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Ten second penalty. Missed control point.",
+  "textSha256": "615fa33a4d8fd6bfc7ca65eadb1e2c4fbf1a1e962c0a4fd3fcfe5aea2f4a8b29",
+  "audioSha256": "28bdc79e3eb8ab3c1f35922ab98f028c62e7e07cb5f057d1409c8fcf9183108b",
+  "bytes": 41004
+}

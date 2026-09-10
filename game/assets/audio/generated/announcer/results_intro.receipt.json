@@ -1,0 +1,12 @@
+{
+  "id": "results_intro",
+  "role": "announcer",
+  "generatedAt": "2026-08-23T21:44:12.882Z",
+  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Here are the standings.",
+  "textSha256": "9ca81fbaa0daf22dd192bae761ad5f87d88d1cbde47ea85dff9d0adc764fe0b1",
+  "audioSha256": "a840524ff903153ed15b8159af6173fa8ad1095e97d06b3e5cddb0c42b787585",
+  "bytes": 24285
+}

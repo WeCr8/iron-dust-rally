@@ -1,0 +1,33 @@
+extends Node2D
+
+const MenuInput = preload("res://scripts/menu_input.gd")
+const Vehicles = preload("res://scripts/vehicles.gd")
+
+var font: Font
+var game_state: Node
+
+func _ready() -> void:
+	font = ThemeDB.fallback_font
+	game_state = get_node("/root/GameState")
+
+func _unhandled_input(event: InputEvent) -> void:
+	if MenuInput.confirm_pressed(event):
+		get_tree().change_scene_to_file("res://scenes/race.tscn")
+	elif MenuInput.cancel_pressed(event):
+		get_tree().change_scene_to_file("res://scenes/title_screen.tscn")
+
+func _draw() -> void:
+	draw_rect(Rect2(0, 0, 1280, 720), Color("2b1c12"), true)
+	draw_string(font, Vector2(0, 90), "RACE COMPLETE", HORIZONTAL_ALIGNMENT_CENTER, 1280, 42, Color("ffd166"))
+	var results: Array = game_state.last_results
+	for i in results.size():
+		var entry: Dictionary = results[i]
+		var player_i: int = entry["player_index"]
+		var y: float = 200.0 + i * 70.0
+		draw_rect(Rect2(390, y, 500, 54), Color(0.08, 0.07, 0.06, 0.85), true)
+		var vehicle: Dictionary = Vehicles.get_vehicle(game_state.car_index[player_i])
+		var color: Color = vehicle["color"]
+		draw_circle(Vector2(420, y + 27), 12.0, color)
+		var tag: String = "" if entry["human"] else "  CPU"
+		draw_string(font, Vector2(450, y + 35), "%d.  P%d  %s%s" % [entry["finish_place"], player_i + 1, vehicle["name"], tag], HORIZONTAL_ALIGNMENT_LEFT, 420, 22, Color.WHITE)
+	draw_string(font, Vector2(0, 620), "click / press start to rematch     ESC/B for main menu", HORIZONTAL_ALIGNMENT_CENTER, 1280, 18, Color(1, 1, 1, 0.6))

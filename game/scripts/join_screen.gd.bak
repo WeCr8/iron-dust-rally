@@ -1,0 +1,57 @@
+extends Node2D
+
+const UIAtlas = preload("res://scripts/ui_atlas.gd")
+const MenuInput = preload("res://scripts/menu_input.gd")
+
+var font: Font
+var game_state: Node
+
+func _ready() -> void:
+	font = ThemeDB.fallback_font
+	game_state = get_node("/root/GameState")
+
+func _process(_delta: float) -> void:
+	for i in range(1, 4):
+		var action := "p%d_accelerate" % (i + 1)
+		if InputMap.has_action(action) and Input.is_action_just_pressed(action):
+			game_state.joined[i] = not game_state.joined[i]
+	queue_redraw()
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Player 2-4 controllers use their accelerate button to toggle joining,
+	# so only mouse/keyboard/Player-1's controller may advance the screen
+	# here, otherwise toggling a player in would immediately leave the screen.
+	var is_confirm := false
+	if event is InputEventMouseButton and event.pressed:
+		is_confirm = true
+	elif event is InputEventKey and event.pressed and not event.echo:
+		var code: int = event.physical_keycode
+		is_confirm = code == KEY_ENTER or code == KEY_SPACE or code == KEY_KP_ENTER
+	elif event is InputEventJoypadButton and event.pressed and event.device == 0 and event.button_index == JOY_BUTTON_A:
+		is_confirm = true
+	if is_confirm:
+		get_tree().change_scene_to_file("res://scenes/car_select.tscn")
+	elif MenuInput.cancel_pressed(event):
+		get_tree().change_scene_to_file("res://scenes/title_screen.tscn")
+
+func _draw() -> void:
+	draw_rect(Rect2(0, 0, 1280, 720), Color("2b1c12"), true)
+	draw_string(font, Vector2(0, 70), "SELECT PLAYERS", HORIZONTAL_ALIGNMENT_CENTER, 1280, 34, Color("fff3d4"))
+	var badge_size := Vector2(170, 266)
+	var start_x := 200.0
+	var gap := 260.0
+	for i in 4:
+		var pos := Vector2(start_x + i * gap, 260)
+		draw_texture_rect_region(UIAtlas.TEXTURE, Rect2(pos, badge_size), UIAtlas.BADGE_REGIONS[i])
+		var ready: bool = i == 0 or game_state.joined[i]
+		var label: String = "READY" if ready else "CPU"
+		draw_string(font, pos + Vector2(-15, 300), label, HORIZONTAL_ALIGNMENT_CENTER, 200, 20, Color("06d6a0") if ready else Color(1, 1, 1, 0.5))
+		var hint := ""
+		if i == 1:
+			hint = "press to toggle"
+		elif i >= 2:
+			var action := "p%d_accelerate" % (i + 1)
+			hint = "press to toggle" if InputMap.has_action(action) else "connect gamepad"
+		if hint != "":
+			draw_string(font, pos + Vector2(-15, 325), hint, HORIZONTAL_ALIGNMENT_CENTER, 200, 12, Color(1, 1, 1, 0.4))
+	draw_string(font, Vector2(0, 650), "click / press start to continue", HORIZONTAL_ALIGNMENT_CENTER, 1280, 18, Color("ffd166"))

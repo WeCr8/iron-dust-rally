@@ -1,0 +1,12 @@
+{
+  "id": "welcome",
+  "role": "announcer",
+  "generatedAt": "2026-08-23T21:44:09.922Z",
+  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Welcome to Iron Dust Rally.",
+  "textSha256": "f16eb4868be2b0c3d310018811e1479a6b9975dff8a2de83496ff9f89bdf4f6d",
+  "audioSha256": "224b4950413e2896747484f2c9d50f25d881b1144244dc80e9ef9ad32b1625aa",
+  "bytes": 26375
+}

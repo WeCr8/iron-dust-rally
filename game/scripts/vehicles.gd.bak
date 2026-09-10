@@ -1,0 +1,11 @@
+extends Node
+
+const LIST := [
+	{"name": "Scorpion Red", "color": Color("ef476f"), "speed_mult": 1.0, "accel_mult": 1.0, "boost_mult": 1.0, "blurb": "Balanced all-rounder"},
+	{"name": "Canyon Gold", "color": Color("ffd166"), "speed_mult": 1.18, "accel_mult": 0.85, "boost_mult": 0.95, "blurb": "High top speed, slow to wind up"},
+	{"name": "Verde Teal", "color": Color("06d6a0"), "speed_mult": 0.88, "accel_mult": 1.28, "boost_mult": 1.0, "blurb": "Snappy acceleration, lower top speed"},
+	{"name": "Blue Thunder", "color": Color("70a1ff"), "speed_mult": 0.95, "accel_mult": 1.0, "boost_mult": 1.35, "blurb": "Boost pickups hit much harder"}
+]
+
+static func get_vehicle(index: int) -> Dictionary:
+	return LIST[clampi(index, 0, LIST.size() - 1)]

@@ -1,0 +1,12 @@
+{
+  "id": "note_puncture",
+  "role": "codriver",
+  "generatedAt": "2026-08-23T21:44:18.057Z",
+  "voiceId": "pNInz6obpgDQGcFmaJgB",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "We have a puncture. Rear left.",
+  "textSha256": "fc9e6e66ed81ce6379c87540a63a4518058a2e2473e0c27f21263326a4f104dd",
+  "audioSha256": "f9d1f9f7713c4e8f2a0f86ff5b89abef712a11318f153096f5ee54406aa3a738",
+  "bytes": 27211
+}

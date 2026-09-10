@@ -1,0 +1,12 @@
+{
+  "id": "countdown_2",
+  "role": "announcer",
+  "generatedAt": "2026-08-23T21:44:03.208Z",
+  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Two.",
+  "textSha256": "1eb32d1ee4458814f94f8b92d1bd3e06e16dca6fab43d53f700840321f27fdf4",
+  "audioSha256": "a9afc737806461b18d3cf429500bc368cc466bc067e5e55b39c18d21a34b8981",
+  "bytes": 13000
+}

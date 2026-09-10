@@ -1,0 +1,12 @@
+{
+  "id": "stage_start",
+  "role": "announcer",
+  "generatedAt": "2026-08-23T21:44:05.960Z",
+  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Stage one. Clear road ahead. Driver, when you are ready.",
+  "textSha256": "a622648b957a80c52bf43e3c8b9f8c22ff7966f1ea3dfea09546ea964df0e962",
+  "audioSha256": "7573a372b2e99571e3eb172944c2e37c778335a2856034e1cf10a2907b3569ca",
+  "bytes": 49363
+}

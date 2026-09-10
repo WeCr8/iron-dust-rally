@@ -1,0 +1,12 @@
+{
+  "id": "note_right_5",
+  "role": "codriver",
+  "generatedAt": "2026-08-23T21:44:14.472Z",
+  "voiceId": "pNInz6obpgDQGcFmaJgB",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Right five, over crest.",
+  "textSha256": "5d8059f3b75740eeec92ac2c409577ca2378c79f5d47a8ccb0f042276a3cd3a3",
+  "audioSha256": "432e182d6e47da085e3f8d9b98b934e133c0c6c2cebc9c1d0559dc6bda8a1446",
+  "bytes": 37660
+}

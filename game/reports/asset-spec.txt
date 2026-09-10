@@ -1,0 +1,92 @@
+Iron Dust Rally - specification for MISSING art assets
+root: C:\Users\zach\Documents\Projects\iron-dust-rally-work
+10 referenced file(s) do not exist
+
+assets/art/bollards_180.png
+  used by      : ui_atlas.gd
+  min canvas   : 226 x 1309 px  (anything smaller and the game reads past the edge)
+  regions      : 1
+  layout       : uniform 152x234 cells - a regular grid is safe
+      BOLLARD_180              x=    74 y=  1075  152 x 234
+
+assets/art/bollards_45.png
+  used by      : ui_atlas.gd
+  min canvas   : 217 x 336 px  (anything smaller and the game reads past the edge)
+  regions      : 1
+  layout       : uniform 189x285 cells - a regular grid is safe
+      BOLLARD_45               x=    28 y=    51  189 x 285
+
+assets/art/bollards_60.png
+  used by      : ui_atlas.gd
+  min canvas   : 244 x 363 px  (anything smaller and the game reads past the edge)
+  regions      : 1
+  layout       : uniform 188x285 cells - a regular grid is safe
+      BOLLARD_60               x=    56 y=    78  188 x 285
+
+assets/art/corner_bollards.png
+  used by      : ui_atlas.gd
+  min canvas   : 355 x 285 px  (anything smaller and the game reads past the edge)
+  regions      : 1
+  layout       : uniform 160x230 cells - a regular grid is safe
+      CORNER_BOLLARD           x=   195 y=    55  160 x 230
+
+assets/art/environment_atlas.png
+  used by      : ui_atlas.gd
+  min canvas   : 1241 x 1171 px  (anything smaller and the game reads past the edge)
+  regions      : 7
+  layout       : irregular - each region must land exactly where the code expects:
+      TERRAIN_CLAY             x=     0 y=     0  418 x 418
+      TIRE_WALL                x=    40 y=   468  360 x 265
+      SIGNPOST                 x=   518 y=   463  280 x 275
+      ROCK_PILE                x=   876 y=   463  360 x 285
+      CACTUS                   x=    20 y=   881  370 x 290
+      BATTERY                  x=   558 y=   876  160 x 290
+      DUST                     x=   851 y=   871  390 x 295
+
+assets/art/gentle_corner_bollards.png
+  used by      : ui_atlas.gd
+  min canvas   : 205 x 390 px  (anything smaller and the game reads past the edge)
+  regions      : 1
+  layout       : uniform 190x300 cells - a regular grid is safe
+      GENTLE_BOLLARD           x=    15 y=    90  190 x 300
+
+assets/art/logo_ui_atlas.png
+  used by      : ui_atlas.gd
+  min canvas   : 1530 x 1015 px  (anything smaller and the game reads past the edge)
+  regions      : 8
+  layout       : irregular - each region must land exactly where the code expects:
+      LOGO_REGION              x=    40 y=    10  1450 x 600
+      FRAME_REGION             x=    15 y=   620  775 x 395
+      PILL_REGION              x=   825 y=   645  360 x 95
+      GAUGE_REGION             x=  1195 y=   645  335 x 100
+      (inline)                 x=   825 y=   765  160 x 250
+      (inline)                 x=  1000 y=   765  160 x 250
+      (inline)                 x=  1175 y=   765  160 x 250
+      (inline)                 x=  1350 y=   765  160 x 250
+
+assets/art/straight_bollards.png
+  used by      : ui_atlas.gd
+  min canvas   : 543 x 724 px  (anything smaller and the game reads past the edge)
+  regions      : 2
+  layout       : uniform 271.5x724 cells - a regular grid is safe
+      STRAIGHT_BOLLARD_A       x=     0 y=     0  271.5 x 724
+      STRAIGHT_BOLLARD_B       x= 271.5 y=     0  271.5 x 724
+
+assets/art/terrain_atlas.png
+  used by      : ui_atlas.gd
+  min canvas   : 1254 x 1254 px  (anything smaller and the game reads past the edge)
+  regions      : 5
+  layout       : irregular - each region must land exactly where the code expects:
+      TERRAIN_DIRT             x=     0 y=     0  418 x 627
+      TERRAIN_SAND             x=   418 y=     0  418 x 627
+      TERRAIN_HARDPACK         x=   836 y=     0  418 x 627
+      TERRAIN_MUD              x=     0 y=   627  627 x 627
+      TERRAIN_GRAVEL           x=   627 y=   627  627 x 627
+
+assets/art/vehicles_atlas.png
+  used by      : car_select.gd, racer.gd
+  min canvas   : no resolvable regions - the file is used whole, so its size is a design choice
+
+Every candidate must still pass the asset-qa gates: numerical alpha (not a visual
+checkerboard), no watermarks or stray text, effects contained within their own cell,
+and for terrain, all four edges tested for seams rather than eyeballed.

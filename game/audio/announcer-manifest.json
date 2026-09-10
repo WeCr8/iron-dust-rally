@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "comment": "Reviewed voice lines for Iron Dust Rally. Text lives HERE, never in game code, so every spoken line is reviewable in one place before it is ever synthesised - the same rule the reindustrialize pipeline follows. Nothing here is wired into the build: the game is silent today and stays silent until playback is deliberately added.",
+
+  "voices": {
+    "announcer": {
+      "voiceId": "nPczCjzI2devNBz1zQrb",
+      "comment": "Stock ElevenLabs voice (Brian). Broadcast register - stage intros, results, menus. Deliberately NOT the cloned Zach voice: that clone is restricted to mentor dialogue by docs/ZACH_VOICE_CONSENT.md in the reindustrialize repo, and an announcer is not mentor dialogue.",
+      "settings": { "stability": 0.45, "similarity_boost": 0.75, "style": 0.35 }
+    },
+    "codriver": {
+      "voiceId": "pNInz6obpgDQGcFmaJgB",
+      "comment": "Stock ElevenLabs voice (Adam). In-car register - clipped, urgent, read at pace. Pace notes are called ahead of the corner, so these are short by design.",
+      "settings": { "stability": 0.30, "similarity_boost": 0.80, "style": 0.55 }
+    }
+  },
+
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "enableLogging": false,
+
+  "clips": [
+    { "id": "countdown_3",        "role": "announcer", "text": "Three." },
+    { "id": "countdown_2",        "role": "announcer", "text": "Two." },
+    { "id": "countdown_1",        "role": "announcer", "text": "One." },
+    { "id": "countdown_go",       "role": "announcer", "text": "Go!" },
+
+    { "id": "stage_start",        "role": "announcer", "text": "Stage one. Clear road ahead. Driver, when you are ready." },
+    { "id": "stage_complete",     "role": "announcer", "text": "Stage complete. Timing is provisional until the results board is confirmed." },
+    { "id": "stage_best_time",    "role": "announcer", "text": "That is a new best time on this stage." },
+    { "id": "stage_penalty",      "role": "announcer", "text": "Ten second penalty. Missed control point." },
+
+    { "id": "welcome",            "role": "announcer", "text": "Welcome to Iron Dust Rally." },
+    { "id": "car_select",         "role": "announcer", "text": "Choose your car. Each one settles differently on loose surfaces." },
+    { "id": "track_select",       "role": "announcer", "text": "Select your stage." },
+    { "id": "results_intro",      "role": "announcer", "text": "Here are the standings." },
+
+    { "id": "note_left_4",        "role": "codriver",  "text": "Left four, tightens." },
+    { "id": "note_right_5",       "role": "codriver",  "text": "Right five, over crest." },
+    { "id": "note_left_2_long",   "role": "codriver",  "text": "Left two, long, don't cut." },
+    { "id": "note_caution",       "role": "codriver",  "text": "Caution! Rocks on the inside." },
+    { "id": "note_jump",          "role": "codriver",  "text": "Jump, then immediate right." },
+    { "id": "note_finish",        "role": "codriver",  "text": "Five hundred to finish. Flat out." },
+    { "id": "note_puncture",      "role": "codriver",  "text": "We have a puncture. Rear left." },
+    { "id": "note_good_pace",     "role": "codriver",  "text": "Good pace. Keep it clean." }
+  ]
+}

@@ -1,35 +1,55 @@
-; Engine configuration file.
-; Edit through Godot where possible.
+; Iron Dust Rally — Godot project file
+;
+; RECONSTRUCTED 2026-08-23. The project had no project.godot at all, which meant Godot could
+; not open the directory as a project AND every autoload registration was gone with it. Five
+; names were being called as globals across ~60 sites (UIAtlas alone 36 times) with nothing
+; binding them, so the game could not run.
+;
+; Autoloads below are only the scripts that genuinely qualify, verified individually:
+;   ui_atlas.gd     extends Node        -> UIAtlas
+;   menu_input.gd   extends Node        -> MenuInput
+;   vehicles.gd     extends Node        -> Vehicles
+;   tracks.gd       extends Node        -> Tracks
+;
+; Deliberately NOT autoloads:
+;   racer.gd          declares `class_name RallyRacer` and extends CharacterBody2D - it is a
+;                     spawned entity, not a singleton. (Code called `Racer.new()`, a name that
+;                     does not exist; corrected to `RallyRacer.new()`.)
+;   track_geometry.gd extends RefCounted - an autoload must extend Node, so registering this
+;                     would fail at startup. It is a preloaded utility.
+;   game_state.gd     extends Node but is passed around explicitly rather than referenced as a
+;   profiles.gd       global anywhere in the current code. Left unregistered rather than
+;                     guessed at - add them if that is the intent.
+;
+; main_scene is title_screen: the navigation graph is
+; title_screen -> join_screen -> car_select -> track_select -> race -> results -> title_screen,
+; and title_screen is the only scene nothing routes back *into* mid-flow.
+
 config_version=5
 
 [application]
+
 config/name="Iron Dust Rally"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/title_screen.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+UIAtlas="*res://scripts/ui_atlas.gd"
+MenuInput="*res://scripts/menu_input.gd"
+Vehicles="*res://scripts/vehicles.gd"
+Tracks="*res://scripts/tracks.gd"
 
 [display]
+
 window/size/viewport_width=1280
 window/size/viewport_height=720
-window/size/window_width_override=1280
-window/size/window_height_override=720
 window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
 
 [rendering]
+
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-textures/default_filters/use_nearest_mipmap_filter=false
-
-[physics]
-common/physics_ticks_per_second=60
-
-[input]
-p1_accelerate={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":87), Object(InputEventJoypadButton,"device":0,"button_index":0)]}
-p1_brake={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":83), Object(InputEventJoypadButton,"device":0,"button_index":1)]}
-p1_left={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":65), Object(InputEventJoypadMotion,"device":0,"axis":0,"axis_value":-1.0)]}
-p1_right={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":68), Object(InputEventJoypadMotion,"device":0,"axis":0,"axis_value":1.0)]}
-p1_boost={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":32), Object(InputEventJoypadButton,"device":0,"button_index":2)]}
-p2_accelerate={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":4194320), Object(InputEventJoypadButton,"device":1,"button_index":0)]}
-p2_brake={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":4194322), Object(InputEventJoypadButton,"device":1,"button_index":1)]}
-p2_left={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":4194311), Object(InputEventJoypadMotion,"device":1,"axis":0,"axis_value":-1.0)]}
-p2_right={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":4194313), Object(InputEventJoypadMotion,"device":1,"axis":0,"axis_value":1.0)]}
-p2_boost={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":4194309), Object(InputEventJoypadButton,"device":1,"button_index":2)]}
-restart={"deadzone": 0.2, "events": [Object(InputEventKey,"physical_keycode":82)]}
+textures/canvas_textures/default_texture_filter=0

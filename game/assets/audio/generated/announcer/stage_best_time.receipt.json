@@ -1,0 +1,12 @@
+{
+  "id": "stage_best_time",
+  "role": "announcer",
+  "generatedAt": "2026-08-23T21:44:08.014Z",
+  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "That is a new best time on this stage.",
+  "textSha256": "4adb10205675be790a5046e0451ad6d5f14ea69676a487622b834d4881a5069c",
+  "audioSha256": "39f7cfcdd971bbb06781f37f825c20bbe61c98529002cf8a291eb1e9272122e9",
+  "bytes": 38078
+}

@@ -1,0 +1,12 @@
+{
+  "id": "stage_complete",
+  "role": "announcer",
+  "generatedAt": "2026-08-23T21:44:07.068Z",
+  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Stage complete. Timing is provisional until the results board is confirmed.",
+  "textSha256": "027bef73c2f92ebf5f9629d0d2d9376915c2bc296ec49a008a3674ad0739175a",
+  "audioSha256": "9ee4f50eaf1a5149da466877e782a46eeefe55916af215f73a54a868a31712bc",
+  "bytes": 68589
+}

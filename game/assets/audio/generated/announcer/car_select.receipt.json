@@ -1,0 +1,12 @@
+{
+  "id": "car_select",
+  "role": "announcer",
+  "generatedAt": "2026-08-23T21:44:11.066Z",
+  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Choose your car. Each one settles differently on loose surfaces.",
+  "textSha256": "c64bc149cd04e05e1a6d127c9020f74933baf1f73120a8a8ac698d41d740654b",
+  "audioSha256": "3e53d991a3de3ed23550790c712b8dc77cd49288523355540c9cec097040d0ac",
+  "bytes": 59812
+}

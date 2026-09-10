@@ -1,0 +1,69 @@
+extends Node2D
+
+const UIAtlas = preload("res://scripts/ui_atlas.gd")
+const Vehicles = preload("res://scripts/vehicles.gd")
+const MenuInput = preload("res://scripts/menu_input.gd")
+const VEHICLE_ATLAS = preload("res://assets/art/vehicles_atlas.png")
+
+var font: Font
+var game_state: Node
+
+func _ready() -> void:
+	font = ThemeDB.fallback_font
+	game_state = get_node("/root/GameState")
+
+func _process(_delta: float) -> void:
+	for i in 4:
+		if not game_state.joined[i]:
+			continue
+		var left_action := "p%d_left" % (i + 1)
+		var right_action := "p%d_right" % (i + 1)
+		if InputMap.has_action(left_action) and Input.is_action_just_pressed(left_action):
+			_cycle(i, -1)
+		if InputMap.has_action(right_action) and Input.is_action_just_pressed(right_action):
+			_cycle(i, 1)
+	queue_redraw()
+
+func _cycle(player_i: int, direction: int) -> void:
+	var taken := {}
+	for j in 4:
+		if game_state.joined[j] and j != player_i:
+			taken[game_state.car_index[j]] = true
+	var idx: int = game_state.car_index[player_i]
+	for _n in 4:
+		idx = (idx + direction + 4) % 4
+		if not taken.has(idx):
+			break
+	game_state.car_index[player_i] = idx
+
+func _unhandled_input(event: InputEvent) -> void:
+	if MenuInput.confirm_pressed(event):
+		get_tree().change_scene_to_file("res://scenes/track_select.tscn")
+	elif MenuInput.cancel_pressed(event):
+		get_tree().change_scene_to_file("res://scenes/join_screen.tscn")
+
+func _draw() -> void:
+	draw_rect(Rect2(0, 0, 1280, 720), Color("2b1c12"), true)
+	draw_string(font, Vector2(0, 60), "CHOOSE YOUR CAR", HORIZONTAL_ALIGNMENT_CENTER, 1280, 34, Color("fff3d4"))
+	var joined_indices: Array[int] = []
+	for i in 4:
+		if game_state.joined[i]:
+			joined_indices.append(i)
+	var slot_count := joined_indices.size()
+	var gap: float = 1280.0 / float(slot_count + 1)
+	for slot in slot_count:
+		var player_i: int = joined_indices[slot]
+		var car_i: int = game_state.car_index[player_i]
+		var vehicle: Dictionary = Vehicles.get_vehicle(car_i)
+		var color: Color = vehicle["color"]
+		var cx: float = gap * (slot + 1)
+		var region := Rect2(Vector2((car_i % 2) * 619, (car_i / 2) * 635), Vector2(619, 635))
+		var display_size := Vector2(180, 184)
+		draw_texture_rect_region(VEHICLE_ATLAS, Rect2(Vector2(cx - display_size.x / 2.0, 220), display_size), region)
+		draw_string(font, Vector2(cx - 140, 430), "P%d" % (player_i + 1), HORIZONTAL_ALIGNMENT_CENTER, 280, 16, Color(1, 1, 1, 0.6))
+		draw_string(font, Vector2(cx - 140, 455), vehicle["name"], HORIZONTAL_ALIGNMENT_CENTER, 280, 22, color)
+		draw_string(font, Vector2(cx - 140, 478), vehicle["blurb"], HORIZONTAL_ALIGNMENT_CENTER, 280, 13, Color(1, 1, 1, 0.7))
+		var stats_text := "SPD %d%%  ACC %d%%  BOOST %d%%" % [int(vehicle["speed_mult"] * 100), int(vehicle["accel_mult"] * 100), int(vehicle["boost_mult"] * 100)]
+		draw_string(font, Vector2(cx - 140, 500), stats_text, HORIZONTAL_ALIGNMENT_CENTER, 280, 13, Color("ffd166"))
+		draw_string(font, Vector2(cx - 140, 522), "< left / right >", HORIZONTAL_ALIGNMENT_CENTER, 280, 12, Color(1, 1, 1, 0.4))
+	draw_string(font, Vector2(0, 650), "click / press start to continue", HORIZONTAL_ALIGNMENT_CENTER, 1280, 18, Color("ffd166"))

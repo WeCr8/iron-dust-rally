@@ -1,0 +1,12 @@
+{
+  "id": "note_jump",
+  "role": "codriver",
+  "generatedAt": "2026-08-23T21:44:16.635Z",
+  "voiceId": "pNInz6obpgDQGcFmaJgB",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "text": "Jump, then immediate right.",
+  "textSha256": "bc188d73f61ceb8530aed107ed5d271cb0369cfe596bd1f357dac15fe11e76c3",
+  "audioSha256": "51071c6f2dc67335489293dcf1d03d8964e87668b08205b95b6d112ea6c1ced9",
+  "bytes": 27211
+}

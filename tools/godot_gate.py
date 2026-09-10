@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""godot_gate - boot the game headless and fail on anything the engine complains about.
+"""godot_gate - boot the game headless, parse every script, and fail on anything the engine
+complains about.
 
 This is the gate that actually knows whether the game runs. check-project.mjs is a static
 reference checker: it verifies that a referenced path EXISTS, which is necessary and not
-sufficient. Godot does not load a raw PNG, it loads the imported artifact, so the project once
-showed 0 critical findings while every preload in ui_atlas.gd failed at parse time and the game
-did not boot. Only the engine can settle it.
+sufficient. Godot loads imported artifacts, not raw source assets, so the project once reported
+0 critical findings while every preload in ui_atlas.gd failed at parse time and the game did not
+boot. Only the engine can settle it.
 
-Errors are re-emitted as `PROBLEM: file:line:col: message [rule]`, which is the shape the
-improve loop's lint picker already parses. Without a file and a line the loop can measure this
-project but cannot work it - it would have nothing to hand an agent.
+Errors are re-emitted as `PROBLEM: file:line:col: message [rule]`, the shape the improve loop's
+lint picker already parses. Without a file and a line the loop can measure this project but
+cannot work it - it would have nothing to hand an agent.
 """
 import os
 import re
@@ -19,6 +20,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+GAME = ROOT / "game"
 
 
 def find_godot():
@@ -50,23 +52,48 @@ def find_godot():
     return None
 
 
+def godot_run(args, timeout):
+    r = subprocess.run([godot, "--headless", "--path", "game"] + args,
+                       cwd=ROOT, text=True, capture_output=True, timeout=timeout, check=False)
+    return r, (r.stdout or "") + (r.stderr or "")
+
+
 godot = find_godot()
 if not godot:
     print("Godot 4 is required for autonomous code acceptance.", file=sys.stderr)
     raise SystemExit(2)
 
-result = subprocess.run(
-    [godot, "--headless", "--path", "game", "--quit-after", "180"],
-    cwd=ROOT, text=True, capture_output=True, timeout=240, check=False,
-)
-out = (result.stdout or "") + (result.stderr or "")
+# IMPORT FIRST, ALWAYS. The import cache lives in game/.godot/, which is gitignored - correctly,
+# it is rebuildable. But that made this gate's answer depend on whether a cache happened to
+# exist:
+#
+#   warm (.godot present)   0 engine errors
+#   cold (fresh checkout)  52 engine errors, 19 locatable
+#
+# Same commit, same code. Every improve-loop worktree is a fresh checkout, so the loop measured
+# a cold baseline, watched an agent silence inference errors that existed only because nothing
+# had been imported, and recorded it as a real improvement. A gate whose result depends on
+# leftover build state is not a gate.
+imported, _ = godot_run(["--import"], 600)
+if imported.returncode:
+    print("WARNING: asset import returned {}".format(imported.returncode), file=sys.stderr)
+
+result, out = godot_run(["--quit-after", "180"], 240)
 print(out[-12000:])
+
+problems = []
+
+
+def add(path, lineno, message, rule):
+    entry = "PROBLEM: {}:{}:1: {} [{}]".format(path, lineno, message, rule)
+    if entry not in problems:
+        problems.append(entry)
+
 
 # Godot prints the location on a FOLLOWING line, as
 #   at: GDScript::reload (res://scripts/ui_atlas.gd:64)
 # so messages and locations must be paired up rather than read off one line.
 lines = out.splitlines()
-problems = []
 for i, line in enumerate(lines):
     m = re.match(r"^(SCRIPT ERROR|ERROR):\s*(.+?)\s*$", line)
     if not m:
@@ -80,17 +107,36 @@ for i, line in enumerate(lines):
             break
     if not where:
         continue          # engine-level error with no source location - not agent-fixable
-    abs_path = (ROOT / "game" / where).as_posix()
-    rule = "godot-parse" if "Parse Error" in message else "godot-runtime"
-    problems.append("PROBLEM: {}:{}:1: {} [{}]".format(abs_path, lineno, message, rule))
+    add((GAME / where).as_posix(), lineno, message,
+        "godot-parse" if "Parse Error" in message else "godot-runtime")
+
+boot_errors = len(re.findall(r"^(?:SCRIPT ERROR|ERROR):", out, re.MULTILINE))
+
+# PER-SCRIPT PARSE CHECK. Booting only parses what the startup path reaches - the four autoloads
+# and the main scene. A deliberately broken racer.gd sailed through cleanly because it is a
+# spawned entity, not a singleton, so nothing loaded it. That is 4 of 14 scripts covered, and
+# the 10 it misses are exactly where an agent is most likely to be editing.
+#
+# `--check-only --script` parses one file and exits 1 on a parse error, so running it over every
+# .gd file closes the gap. About a second per script; cheap next to booting.
+script_errors = 0
+for gd in sorted(GAME.rglob("*.gd")):
+    rel = gd.relative_to(GAME).as_posix()
+    chk, chk_out = godot_run(["--check-only", "--script", "res://" + rel], 120)
+    if not chk.returncode:
+        continue
+    for m in re.finditer(r"^SCRIPT ERROR:\s*(.+?)\s*$", chk_out, re.MULTILINE):
+        script_errors += 1
+        loc = re.search(r"\(res://" + re.escape(rel) + r":(\d+)\)", chk_out)
+        add(gd.as_posix(), int(loc.group(1)) if loc else 1, m.group(1), "godot-parse")
 
 for p_line in problems:
     print(p_line)
 
+total = boot_errors + script_errors
+print("\nGODOT_GATE: {} engine error(s) on boot, {} script parse error(s), "
+      "{} locatable, exit {}".format(boot_errors, script_errors, len(problems), result.returncode))
+
 # Godot exits 0 even when an autoload fails to instantiate, so the return code alone would call
 # a broken game green. Count instead.
-errors = re.findall(r"^(?:SCRIPT ERROR|ERROR):", out, re.MULTILINE)
-print("\nGODOT_GATE: {} engine error(s), {} locatable, exit {}".format(
-    len(errors), len(problems), result.returncode))
-
-raise SystemExit(result.returncode if result.returncode else (1 if errors else 0))
+raise SystemExit(result.returncode if result.returncode else (1 if total else 0))
